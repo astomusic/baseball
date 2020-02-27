@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "module": "esnext",
+    "target": "es2016",
+    "jsx": "react",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "src/*": [
+        "src/*"
+      ],
+      "images/*": [
+        "public/images/*"
+      ],
+      "fonts/*": [
+        "public/fonts/*"
+      ],
+      "docs/*": [
+        "public/docs/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "src",
+    "./@types/*.d.ts"
+  ]
+}

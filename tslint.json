@@ -1,0 +1,21 @@
+{
+  "extends": ["tslint:latest", "tslint-react", "tslint-config-prettier", "tslint-plugin-prettier"],
+  "rules": {
+    "prettier": [true, ".prettierrc"],
+    "object-literal-sort-keys": {
+      "options": "match-declaration-order"
+    },
+    "member-access": [true, "no-public"],
+    "prefer-const": true,
+    "array-type": [true, "array-simple"],
+    "no-submodule-imports": false,
+    "no-console": [true, "debug"],
+    "no-empty": false,
+    "no-implicit-dependencies": false,
+    "interface-name": false,
+    "jsx-boolean-value": false
+  },
+  "linterOptions": {
+    "exclude": ["node_modules/**/*"]
+  }
+}
