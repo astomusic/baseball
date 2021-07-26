@@ -110,9 +110,13 @@ const Home = () => {
       return;
     }
     const desc = new RTCSessionDescription({ type: 'answer', sdp: answer });
-    pc.setRemoteDescription(desc).catch(err => {
-      console.log(err);
-    });
+    pc.setRemoteDescription(desc)
+      .then(() => {
+        return openCall();
+      })
+      .catch(err => {
+        console.log(err);
+      });
   };
 
   const isBaseballNum = (guess: string) => {
@@ -144,6 +148,13 @@ const Home = () => {
     setFixSecretNum(true);
     setDisabledGuess(false);
     dc.send(`key:${secretNum}`);
+  };
+
+  const openCall = async () => {
+    const gumStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    for (const track of gumStream.getTracks()) {
+      pc.addTrack(track);
+    }
   };
 
   if (dc) {
