@@ -11,14 +11,14 @@ import { Title } from 'src/styles/common/Typography';
 
 const Wrapper = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   margin: 20px;
   grid-gap: 20px;
 `;
 
 const Card = styled.div`
   background-color: #ccc;
-  height: 900px;
+  height: 800px;
   padding: 10px;
   box-sizing: border-box;
 `;
@@ -57,6 +57,7 @@ const Test = () => {
   const [offer5, setOffer5] = useState('');
   const [answers, setAnswers] = useState(['', '', '', '', '']);
   const [pcs, setPcs] = useState([null, null, null, null, null]);
+  const [pcTest2, setPcTest2] = useState(null);
   const viewRef1 = useRef<HTMLVideoElement>(null);
   const viewRef2 = useRef<HTMLVideoElement>(null);
   const viewRef3 = useRef<HTMLVideoElement>(null);
@@ -66,7 +67,7 @@ const Test = () => {
   const videoData = [
     {
       id: 1,
-      title: 'video17',
+      title: 'video1',
       offer: offer1,
       setOffer: setOffer1,
       ref: viewRef1,
@@ -75,7 +76,7 @@ const Test = () => {
     },
     {
       id: 2,
-      title: 'video18',
+      title: 'video2',
       offer: offer2,
       setOffer: setOffer2,
       ref: viewRef2,
@@ -155,6 +156,16 @@ const Test = () => {
       console.log(pcTest.iceConnectionState);
     };
 
+    const pcTest2Temp = new RTCPeerConnection(rtcConfig);
+
+    pcTest2Temp.ontrack = e => {
+      console.log('onTrack');
+      viewRef1.current.srcObject = e.streams[0];
+    };
+    pcTest2Temp.oniceconnectionstatechange = e => {
+      console.log(pcTest.iceConnectionState);
+    };
+    setPcTest2(pcTest2Temp);
     setPcs(tempPcs);
   }, []);
 
@@ -163,16 +174,15 @@ const Test = () => {
       type: 'offer',
       sdp: offer,
     });
+    const pcTest2Temp = pcTest2;
 
-    pcTest
+    pcTest2Temp
       .setRemoteDescription(desc)
-      .then(() => pcTest.createAnswer())
-      .then(d => {
-        pcTest.setLocalDescription(d);
-      })
+      .then(() => pcTest2Temp.createAnswer())
+      .then(d => pcTest2Temp.setLocalDescription(d))
       .then(() => {
         const answer = {
-          sdp: pcTest.localDescription.sdp,
+          sdp: pcTest2Temp.localDescription.sdp,
           type: 'ANSWER',
         };
         const db = firebase.firestore();
@@ -187,37 +197,34 @@ const Test = () => {
         console.log('error');
         console.log(err);
       });
+
+    setPcTest2(pcTest2Temp);
   };
 
-  const connectOffer2 = (pc, offer, index, key) => async () => {
+  const connectOffer2 = (pc: RTCPeerConnection, offer, index, key) => async () => {
     const desc = new RTCSessionDescription({
       type: 'offer',
       sdp: offer,
     });
-
+    console.log(pc.currentLocalDescription);
     await pc.setRemoteDescription(desc);
-    const d = await pc.createAnswer();
-    await pc.setLocalDescription(d);
-    console.log(pc.localDescription);
-    const answer = {
-      sdp: pc.localDescription.sdp,
-      type: pc.localDescription.type.upperCase(),
-    };
-    const db = firebase.firestore();
-    db.collection('calls')
-      .doc(key)
-      .set(answer)
-      .then(() => {
-        console.log('ANSWER_success');
-      });
+    console.log(pc.currentLocalDescription);
+    await pc.setLocalDescription(await pc.createAnswer());
+    console.log(pc.currentLocalDescription);
 
-    pc.onicecandidate = f => {
-      if (f.candidate || pc.iceConnectionState !== 'connected') {
-        return;
-      }
-
-      console.log(pc.localDescription.sdp);
-    };
+    window.setTimeout(() => {
+      const answer = {
+        sdp: pc.localDescription.sdp,
+        type: 'ANSWER',
+      };
+      const db = firebase.firestore();
+      db.collection('calls')
+        .doc(key)
+        .set(answer)
+        .then(() => {
+          console.log('ANSWER_success');
+        });
+    }, 1000);
   };
 
   const connectOffer4 = (pc, offer, index, key) => async () => {
@@ -338,7 +345,7 @@ const Test = () => {
             solid
             theme={'mint'}
             margin={'21px 0 0 0'}
-            onClick={connectOffer(pcs[index], item.offer, index, item.key)}
+            onClick={connectOffer2(pcs[index], item.offer, index, item.key)}
           >
             {'Connect Offer'}
           </Button>
