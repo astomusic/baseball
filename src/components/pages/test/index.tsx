@@ -137,15 +137,26 @@ const Test = () => {
         });
     });
 
+    const iceCan = (pc: RTCPeerConnection) => async e => {
+      console.log('onicecandidate');
+      pc.addIceCandidate(e.candidate);
+    };
+
     const tempPcs = videoData.map(item => {
       const pc = item.pc;
       pc.ontrack = e => {
         console.log('execute on track');
-        item.ref.current.srcObject = e.streams[0];
+        if (item.ref.current.srcObject !== e.streams[0]) {
+          item.ref.current.srcObject = e.streams[0];
+          console.log('pc received remote stream');
+        }
       };
       pc.oniceconnectionstatechange = e => {
+        console.log('oniceconnectionstatechange');
+        console.log(pc.iceConnectionState);
         console.log(e);
       };
+      pc.onicecandidate = iceCan(pc);
       return pc;
     });
 
@@ -202,7 +213,7 @@ const Test = () => {
   //   setPcTest2(pcTest2Temp);
   // };
 
-  const connectOffer2 = (pc: RTCPeerConnection, offer, index, key) => () => {
+  const connectOffer2 = (pc: RTCPeerConnection, offer, index, key) => async () => {
     const desc = new RTCSessionDescription({
       type: 'offer',
       sdp: offer,
@@ -210,21 +221,22 @@ const Test = () => {
 
     console.log('execute connectOffer2');
 
-    pc.setRemoteDescription(desc)
-      .then(() => {
-        console.log('before createAnswer');
-        return pc.createAnswer({ offerToReceiveVideo: true, offerToReceiveAudio: true });
-      })
-      .then(d => {
-        console.log('before setLocalDescription');
-        return pc.setLocalDescription(new RTCSessionDescription(d));
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    // pc.setRemoteDescription(desc)
+    //   .then(() => {
+    //     console.log('before createAnswer');
+    //     return pc.createAnswer({ offerToReceiveVideo: true, offerToReceiveAudio: true });
+    //   })
+    //   .then(d => {
+    //     console.log('before setLocalDescription');
+    //     return pc.setLocalDescription(new RTCSessionDescription(d));
+    //   })
+    //   .catch(err => {
+    //     console.log(err);
+    //   });
 
-    // await pc.setRemoteDescription(desc);
-    // await pc.setLocalDescription(await pc.createAnswer());
+    await pc.setRemoteDescription(desc);
+    const newAnswer = await pc.createAnswer();
+    await pc.setLocalDescription(newAnswer);
 
     window.setTimeout(() => {
       const answer = {
