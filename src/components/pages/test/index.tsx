@@ -138,69 +138,69 @@ const Test = () => {
     });
 
     const tempPcs = videoData.map(item => {
-      const pc = new RTCPeerConnection(rtcConfig);
+      const pc = item.pc;
       pc.ontrack = e => {
-        console.log('onTrack');
+        console.log('execute on track');
         item.ref.current.srcObject = e.streams[0];
       };
       pc.oniceconnectionstatechange = e => {
-        console.log(item.pc.iceConnectionState);
+        console.log(e);
       };
       return pc;
     });
 
-    pcTest.ontrack = e => {
-      console.log('onTrack');
-      viewRef1.current.srcObject = e.streams[0];
-    };
-    pcTest.oniceconnectionstatechange = e => {
-      console.log(pcTest.iceConnectionState);
-    };
+    // pcTest.ontrack = e => {
+    //   console.log('onTrack');
+    //   viewRef1.current.srcObject = e.streams[0];
+    // };
+    // pcTest.oniceconnectionstatechange = e => {
+    //   console.log(pcTest.iceConnectionState);
+    // };
 
-    const pcTest2Temp = new RTCPeerConnection(rtcConfig);
+    // const pcTest2Temp = new RTCPeerConnection(rtcConfig);
 
-    pcTest2Temp.ontrack = e => {
-      console.log('onTrack');
-      viewRef1.current.srcObject = e.streams[0];
-    };
-    pcTest2Temp.oniceconnectionstatechange = e => {
-      console.log(pcTest.iceConnectionState);
-    };
-    setPcTest2(pcTest2Temp);
+    // pcTest2Temp.ontrack = e => {
+    //   console.log('onTrack');
+    //   viewRef1.current.srcObject = e.streams[0];
+    // };
+    // pcTest2Temp.oniceconnectionstatechange = e => {
+    //   console.log(pcTest.iceConnectionState);
+    // };
+    // setPcTest2(pcTest2Temp);
     setPcs(tempPcs);
   }, []);
 
-  const connectOffer3 = (pc, offer, index, key) => () => {
-    const desc = new RTCSessionDescription({
-      type: 'offer',
-      sdp: offer,
-    });
-    const pcTest2Temp = pcTest2;
+  // const connectOffer3 = (pc, offer, index, key) => () => {
+  //   const desc = new RTCSessionDescription({
+  //     type: 'offer',
+  //     sdp: offer,
+  //   });
+  //   const pcTest2Temp = pcTest2;
 
-    pcTest2Temp
-      .setRemoteDescription(desc)
-      .then(() => pcTest2Temp.createAnswer())
-      .then(d => pcTest2Temp.setLocalDescription(d))
-      .then(() => {
-        const answer = {
-          sdp: pcTest2Temp.localDescription.sdp,
-          type: 'ANSWER',
-        };
-        const db = firebase.firestore();
-        db.collection('calls')
-          .doc(key)
-          .set(answer)
-          .then(() => {
-            console.log('ANSWER_success');
-          });
-      })
-      .catch(err => {
-        console.log('error');
-        console.log(err);
-      });
+  //   pcTest2Temp
+  //     .setRemoteDescription(desc)
+  //     .then(() => pcTest2Temp.createAnswer())
+  //     .then(d => pcTest2Temp.setLocalDescription(d))
+  //     .then(() => {
+  //       const answer = {
+  //         sdp: pcTest2Temp.localDescription.sdp,
+  //         type: 'ANSWER',
+  //       };
+  //       const db = firebase.firestore();
+  //       db.collection('calls')
+  //         .doc(key)
+  //         .set(answer)
+  //         .then(() => {
+  //           console.log('ANSWER_success');
+  //         });
+  //     })
+  //     .catch(err => {
+  //       console.log('error');
+  //       console.log(err);
+  //     });
 
-    setPcTest2(pcTest2Temp);
-  };
+  //   setPcTest2(pcTest2Temp);
+  // };
 
   const connectOffer2 = (pc: RTCPeerConnection, offer, index, key) => () => {
     const desc = new RTCSessionDescription({
@@ -208,14 +208,23 @@ const Test = () => {
       sdp: offer,
     });
 
+    console.log('execute connectOffer2');
+
     pc.setRemoteDescription(desc)
-      .then(() => pc.createAnswer())
-      .then(d => pc.setLocalDescription(d));
+      .then(() => {
+        console.log('before createAnswer');
+        return pc.createAnswer({ offerToReceiveVideo: true, offerToReceiveAudio: true });
+      })
+      .then(d => {
+        console.log('before setLocalDescription');
+        return pc.setLocalDescription(new RTCSessionDescription(d));
+      })
+      .catch(err => {
+        console.log(err);
+      });
 
     // await pc.setRemoteDescription(desc);
     // await pc.setLocalDescription(await pc.createAnswer());
-
-    console.log('here');
 
     window.setTimeout(() => {
       const answer = {
@@ -227,41 +236,41 @@ const Test = () => {
         .doc(key)
         .set(answer)
         .then(() => {
-          console.log('ANSWER_success');
+          console.log('update firebase for ANSWER');
         });
     }, 1000);
   };
 
-  const connectOffer4 = (pc, offer, index, key) => async () => {
-    const desc = new RTCSessionDescription({
-      type: 'offer',
-      sdp: offer,
-    });
+  // const connectOffer4 = (pc, offer, index, key) => async () => {
+  //   const desc = new RTCSessionDescription({
+  //     type: 'offer',
+  //     sdp: offer,
+  //   });
 
-    from(pc.setRemoteDescription(desc)).subscribe({
-      next: () => {
-        from(pc.createAnswer()).subscribe({
-          next: d => {
-            from(pc.setLocalDescription(d)).subscribe({
-              next: () => {
-                const answer = {
-                  sdp: pc.localDescription.sdp,
-                  type: 'ANSWER',
-                };
-                const db = firebase.firestore();
-                db.collection('calls')
-                  .doc(key)
-                  .set(answer)
-                  .then(() => {
-                    console.log('ANSWER_success');
-                  });
-              },
-            });
-          },
-        });
-      },
-    });
-  };
+  //   from(pc.setRemoteDescription(desc)).subscribe({
+  //     next: () => {
+  //       from(pc.createAnswer()).subscribe({
+  //         next: d => {
+  //           from(pc.setLocalDescription(d)).subscribe({
+  //             next: () => {
+  //               const answer = {
+  //                 sdp: pc.localDescription.sdp,
+  //                 type: 'ANSWER',
+  //               };
+  //               const db = firebase.firestore();
+  //               db.collection('calls')
+  //                 .doc(key)
+  //                 .set(answer)
+  //                 .then(() => {
+  //                   console.log('ANSWER_success');
+  //                 });
+  //             },
+  //           });
+  //         },
+  //       });
+  //     },
+  //   });
+  // };
 
   const connectOffer = (pc: RTCPeerConnection, offer: string, index: number, key: string) => () => {
     const desc = new RTCSessionDescription({
