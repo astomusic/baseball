@@ -85,6 +85,7 @@ const Test = () => {
     },
     {
       id: 3,
+
       title: 'video3',
       offer: offer3,
       setOffer: setOffer3,
@@ -201,16 +202,20 @@ const Test = () => {
     setPcTest2(pcTest2Temp);
   };
 
-  const connectOffer2 = (pc: RTCPeerConnection, offer, index, key) => async () => {
+  const connectOffer2 = (pc: RTCPeerConnection, offer, index, key) => () => {
     const desc = new RTCSessionDescription({
       type: 'offer',
       sdp: offer,
     });
-    console.log(pc.currentLocalDescription);
-    await pc.setRemoteDescription(desc);
-    console.log(pc.currentLocalDescription);
-    await pc.setLocalDescription(await pc.createAnswer());
-    console.log(pc.currentLocalDescription);
+
+    pc.setRemoteDescription(desc)
+      .then(() => pc.createAnswer())
+      .then(d => pc.setLocalDescription(d));
+
+    // await pc.setRemoteDescription(desc);
+    // await pc.setLocalDescription(await pc.createAnswer());
+
+    console.log('here');
 
     window.setTimeout(() => {
       const answer = {
